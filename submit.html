@@ -67,6 +67,18 @@
         >
       </div>
 
+      <!-- Location -->
+      <div class="form-group form-row">
+        <div style="flex:1;">
+          <label for="city">City <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text-muted);">(optional)</span></label>
+          <input type="text" id="city" class="form-input" placeholder="e.g. Austin" maxlength="80">
+        </div>
+        <div style="flex:0 0 110px;">
+          <label for="state">State</label>
+          <input type="text" id="state" class="form-input" placeholder="e.g. TX" maxlength="30">
+        </div>
+      </div>
+
       <!-- Rating slider -->
       <div class="form-group">
         <label>Rating *</label>
@@ -227,6 +239,8 @@
       const reviewerName = document.getElementById('reviewerName').value.trim();
       const restaurant   = document.getElementById('restaurant').value.trim();
       const foodType     = document.getElementById('foodType').value.trim();
+      const city         = document.getElementById('city').value.trim();
+      const state        = document.getElementById('state').value.trim();
       const rating       = +slider.value;
       const text         = reviewText.value.trim();
 
@@ -255,6 +269,8 @@
           reviewer_name: reviewerName || null,
           restaurant,
           food_type:     foodType || null,
+          city:          city  || null,
+          state:         state || null,
           rating,
           review_text:   text,
           photo_urls:    photoUrls,

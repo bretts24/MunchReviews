@@ -119,10 +119,13 @@ function buildCard(review) {
     galleryHTML = `<div class="card-photo-placeholder">🍽️</div>`;
   }
 
+  const location = [review.city, review.state].filter(Boolean).map(escHtml).join(', ');
+
   card.innerHTML = `
     ${galleryHTML}
     <div class="card-body">
       <div class="card-restaurant">${escHtml(review.restaurant)}</div>
+      ${location ? `<div class="card-location">📍 ${location}</div>` : ''}
       <div class="card-meta">
         ${review.food_type ? `<span class="card-food-type">${escHtml(review.food_type)}</span>` : '<span></span>'}
         <span class="card-date">${review.reviewer_name ? `${escHtml(review.reviewer_name)} · ` : ''}${formatDate(review.created_at)}</span>
@@ -198,11 +201,14 @@ function openReviewModal(review) {
     galleryHTML = `<div class="modal-gallery">${imgs}${dots}${arrows}</div>`;
   }
 
+  const modalLocation = [review.city, review.state].filter(Boolean).map(escHtml).join(', ');
+
   document.getElementById('modalBox').innerHTML = `
     <button class="modal-close" id="modalClose">✕</button>
     ${galleryHTML}
     <div class="modal-body">
-      <div class="card-restaurant" style="font-size:1.3rem;margin-bottom:8px;">${escHtml(review.restaurant)}</div>
+      <div class="card-restaurant" style="font-size:1.3rem;margin-bottom:4px;">${escHtml(review.restaurant)}</div>
+      ${modalLocation ? `<div class="card-location" style="margin-bottom:8px;">📍 ${modalLocation}</div>` : ''}
       <div class="card-meta" style="margin-bottom:12px;">
         ${review.food_type ? `<span class="card-food-type">${escHtml(review.food_type)}</span>` : '<span></span>'}
         <span class="card-date">${review.reviewer_name ? `${escHtml(review.reviewer_name)} · ` : ''}${formatDate(review.created_at)}</span>
@@ -256,7 +262,7 @@ async function fetchReviews({ search = '', sortBy = 'created_at' } = {}) {
 
   if (search.trim()) {
     const term = `%${search.trim()}%`;
-    query = query.or(`restaurant.ilike.${term},food_type.ilike.${term}`);
+    query = query.or(`restaurant.ilike.${term},food_type.ilike.${term},city.ilike.${term},state.ilike.${term}`);
   }
 
   const { data, error } = await query;
