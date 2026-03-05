@@ -45,6 +45,9 @@
       </select>
     </div>
 
+    <!-- Active rating filter banner -->
+    <div id="ratingFilterBanner" style="display:none;margin-bottom:16px;"></div>
+
     <!-- Results count -->
     <p id="resultsCount" style="color:var(--text-muted);font-size:0.88rem;margin-bottom:20px;"></p>
 
@@ -67,6 +70,28 @@
     const searchInput = document.getElementById('searchInput');
     const sortSelect  = document.getElementById('sortSelect');
     const countEl     = document.getElementById('resultsCount');
+    const filterBanner = document.getElementById('ratingFilterBanner');
+
+    // Read ?rating= from URL
+    const urlParams   = new URLSearchParams(window.location.search);
+    const ratingSlug  = urlParams.get('rating');
+    const ratingRange = ratingSlug ? RATING_RANGES[ratingSlug] : null;
+
+    if (ratingRange && ratingSlug) {
+      const meta = getRatingMeta(ratingRange.min);
+      const label = ratingRange.min === ratingRange.max
+        ? `${ratingRange.min}/10`
+        : `${ratingRange.min}–${ratingRange.max}/10`;
+      filterBanner.style.display = 'flex';
+      filterBanner.innerHTML = `
+        <span class="rating-pill ${ratingSlug}" style="font-size:0.95rem;">
+          ${meta.emoji} Filtered: ${meta.label} (${label})
+        </span>
+        <a href="reviews.html" style="margin-left:12px;font-size:0.85rem;color:var(--text-muted);text-decoration:underline;">Clear filter</a>
+      `;
+      filterBanner.style.alignItems = 'center';
+      filterBanner.style.gap = '8px';
+    }
 
     let debounceTimer;
 
@@ -76,6 +101,8 @@
         const reviews = await fetchReviews({
           search: searchInput.value,
           sortBy: sortSelect.value,
+          minRating: ratingRange ? ratingRange.min : null,
+          maxRating: ratingRange ? ratingRange.max : null,
         });
 
         grid.innerHTML = '';

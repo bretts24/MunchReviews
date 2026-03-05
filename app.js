@@ -467,14 +467,27 @@ function closeRecipeModal() {
   document.body.style.overflow = '';
 }
 
+// ---- Rating range from slug ----------------------------------------
+const RATING_RANGES = {
+  poo:       { min: 1,  max: 2  },
+  shwag:     { min: 3,  max: 4  },
+  mids:      { min: 5,  max: 6  },
+  chronic:   { min: 7,  max: 7  },
+  gas:       { min: 8,  max: 9  },
+  holyshit:  { min: 10, max: 10 },
+};
+
 // ---- Fetch all reviews (optionally filtered) ----------------------------------------
-async function fetchReviews({ search = '', sortBy = 'created_at' } = {}) {
+async function fetchReviews({ search = '', sortBy = 'created_at', minRating = null, maxRating = null } = {}) {
   let query = db.from('reviews').select('*').order(sortBy, { ascending: false });
 
   if (search.trim()) {
     const term = `%${search.trim()}%`;
     query = query.or(`restaurant.ilike.${term},food_type.ilike.${term},city.ilike.${term},state.ilike.${term}`);
   }
+
+  if (minRating !== null) query = query.gte('rating', minRating);
+  if (maxRating !== null) query = query.lte('rating', maxRating);
 
   const { data, error } = await query;
   if (error) throw error;
