@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Leave a Review — MunchReviews</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍔</text></svg>">
+</head>
+<body>
+
+  <!-- Nav -->
+  <nav>
+    <a href="index.html" class="nav-logo">Munch<span>Reviews</span></a>
+    <div style="position:relative;">
+      <button class="menu-btn" id="menuBtn" aria-label="Menu">&#8942;</button>
+      <div class="menu-dropdown" id="menuDropdown">
+        <a href="index.html"><span class="icon">🏠</span> Home</a>
+        <a href="reviews.html"><span class="icon">🍽️</span> All Reviews</a>
+        <a href="submit.html"><span class="icon">✍️</span> Leave a Review</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="page">
+    <div class="page-header">
+      <h1>Drop a Review ✍️</h1>
+      <p>No login needed — just your honest take.</p>
+    </div>
+
+    <form class="form-card" id="reviewForm" novalidate>
+
+      <!-- Restaurant name -->
+      <div class="form-group">
+        <label for="restaurant">Restaurant Name *</label>
+        <input
+          type="text"
+          id="restaurant"
+          class="form-input"
+          placeholder="e.g. Joe's Burgers"
+          maxlength="120"
+          required
+        >
+      </div>
+
+      <!-- Food type -->
+      <div class="form-group">
+        <label for="foodType">Food Type</label>
+        <input
+          type="text"
+          id="foodType"
+          class="form-input"
+          placeholder="e.g. Burgers, Sushi, Mexican, Pizza..."
+          maxlength="80"
+        >
+      </div>
+
+      <!-- Rating slider -->
+      <div class="form-group">
+        <label>Rating *</label>
+        <div class="rating-group">
+          <div class="rating-display">
+            <span class="rating-number" id="ratingNumber">5</span>
+            <div>
+              <div class="rating-label-text" id="ratingLabelText">Mids 😐</div>
+              <div style="font-size:0.78rem;color:var(--text-muted);">out of 10</div>
+            </div>
+          </div>
+          <div class="slider-wrap">
+            <input
+              type="range"
+              class="rating-slider"
+              id="ratingSlider"
+              min="1"
+              max="10"
+              value="5"
+            >
+            <div class="rating-labels">
+              <span>1 · Poo 💩</span>
+              <span>5 · Mids 😐</span>
+              <span>10 · Chronic 🔥</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Review text -->
+      <div class="form-group">
+        <label for="reviewText">Your Review *</label>
+        <textarea
+          id="reviewText"
+          class="form-input"
+          placeholder="What did you think? Be honest..."
+          maxlength="600"
+          required
+        ></textarea>
+        <div class="char-count" id="charCount">0 / 600</div>
+      </div>
+
+      <!-- Photos -->
+      <div class="form-group">
+        <label>Photos <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text-muted);">(optional — up to 5)</span></label>
+        <div class="upload-zone" id="uploadZone">
+          <input
+            type="file"
+            id="photoInput"
+            accept="image/*"
+            multiple
+          >
+          <div class="upload-icon">📷</div>
+          <p><strong>Click to upload</strong> or drag & drop</p>
+          <p>JPG, PNG, WEBP · max 5 photos</p>
+        </div>
+        <div class="photo-previews" id="photoPreviews"></div>
+      </div>
+
+      <!-- Submit -->
+      <button type="submit" class="btn btn-primary" id="submitBtn" style="width:100%;justify-content:center;border-radius:8px;padding:15px;">
+        Post Review 🚀
+      </button>
+
+    </form>
+  </main>
+
+  <!-- Supabase + App -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="app.js"></script>
+  <script>
+    initNav();
+
+    // ---- Rating slider ----------------------------------------
+    const slider        = document.getElementById('ratingSlider');
+    const ratingNumber  = document.getElementById('ratingNumber');
+    const ratingLabel   = document.getElementById('ratingLabelText');
+
+    function updateRatingDisplay() {
+      const val  = +slider.value;
+      const meta = getRatingMeta(val);
+      ratingNumber.textContent = val;
+      ratingNumber.style.color = meta.cls === 'poo' ? '#c87941' : meta.cls === 'mids' ? '#d4ad3a' : '#66bb6a';
+      ratingLabel.textContent  = `${meta.label} ${meta.emoji}`;
+    }
+
+    slider.addEventListener('input', updateRatingDisplay);
+    updateRatingDisplay();
+
+    // ---- Char counter ----------------------------------------
+    const reviewText = document.getElementById('reviewText');
+    const charCount  = document.getElementById('charCount');
+
+    reviewText.addEventListener('input', () => {
+      const len = reviewText.value.length;
+      charCount.textContent = `${len} / 600`;
+      charCount.className   = len >= 600 ? 'char-count limit' : len >= 500 ? 'char-count warn' : 'char-count';
+    });
+
+    // ---- Photo upload ----------------------------------------
+    const photoInput   = document.getElementById('photoInput');
+    const photoPreviews = document.getElementById('photoPreviews');
+    const uploadZone   = document.getElementById('uploadZone');
+    let selectedFiles  = [];
+
+    function renderPreviews() {
+      photoPreviews.innerHTML = '';
+      selectedFiles.forEach((file, i) => {
+        const url  = URL.createObjectURL(file);
+        const item = document.createElement('div');
+        item.className = 'preview-item';
+        item.innerHTML = `
+          <img src="${url}" alt="preview">
+          <button class="preview-remove" type="button" data-idx="${i}">✕</button>
+        `;
+        photoPreviews.appendChild(item);
+      });
+
+      photoPreviews.querySelectorAll('.preview-remove').forEach(btn => {
+        btn.addEventListener('click', () => {
+          selectedFiles.splice(+btn.dataset.idx, 1);
+          renderPreviews();
+        });
+      });
+    }
+
+    photoInput.addEventListener('change', () => {
+      const incoming = Array.from(photoInput.files);
+      const combined = [...selectedFiles, ...incoming];
+      selectedFiles  = combined.slice(0, 5); // cap at 5
+      renderPreviews();
+      photoInput.value = ''; // reset so same file can be re-added
+    });
+
+    // Drag-and-drop
+    uploadZone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      uploadZone.classList.add('dragover');
+    });
+    uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('dragover'));
+    uploadZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      uploadZone.classList.remove('dragover');
+      const files   = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
+      const combined = [...selectedFiles, ...files];
+      selectedFiles  = combined.slice(0, 5);
+      renderPreviews();
+    });
+
+    // ---- Form submit ----------------------------------------
+    const form      = document.getElementById('reviewForm');
+    const submitBtn = document.getElementById('submitBtn');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const restaurant = document.getElementById('restaurant').value.trim();
+      const foodType   = document.getElementById('foodType').value.trim();
+      const rating     = +slider.value;
+      const text       = reviewText.value.trim();
+
+      if (!restaurant) {
+        showToast('Please enter a restaurant name.', 'error');
+        return;
+      }
+      if (!text) {
+        showToast('Please write a review.', 'error');
+        return;
+      }
+
+      submitBtn.disabled    = true;
+      submitBtn.textContent = 'Posting... 🚀';
+
+      try {
+        // Upload photos first
+        let photoUrls = [];
+        if (selectedFiles.length > 0) {
+          submitBtn.textContent = 'Uploading photos... 📸';
+          photoUrls = await uploadPhotos(selectedFiles);
+        }
+
+        // Insert review
+        const { error } = await db.from('reviews').insert({
+          restaurant,
+          food_type:   foodType || null,
+          rating,
+          review_text: text,
+          photo_urls:  photoUrls,
+        });
+
+        if (error) throw error;
+
+        showToast('Review posted! 🔥', 'success');
+        setTimeout(() => window.location.href = 'reviews.html', 1200);
+
+      } catch (err) {
+        console.error(err);
+        showToast('Something went wrong. Try again.', 'error');
+        submitBtn.disabled    = false;
+        submitBtn.textContent = 'Post Review 🚀';
+      }
+    });
+  </script>
+
+</body>
+</html>

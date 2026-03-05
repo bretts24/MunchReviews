@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MunchReviews</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍔</text></svg>">
+</head>
+<body>
+
+  <!-- Nav -->
+  <nav>
+    <a href="index.html" class="nav-logo">Munch<span>Reviews</span></a>
+    <div style="position:relative;">
+      <button class="menu-btn" id="menuBtn" aria-label="Menu">&#8942;</button>
+      <div class="menu-dropdown" id="menuDropdown">
+        <a href="index.html"><span class="icon">🏠</span> Home</a>
+        <a href="reviews.html"><span class="icon">🍽️</span> All Reviews</a>
+        <a href="submit.html"><span class="icon">✍️</span> Leave a Review</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <section class="hero">
+    <span class="hero-emoji">🍔</span>
+    <h1>Real food.<br><span class="accent">Real opinions.</span></h1>
+    <p>No fluff, no sponsored posts — just honest reviews from people who actually ate the food.</p>
+
+    <div class="cta-group">
+      <a href="reviews.html" class="btn btn-primary">Browse Reviews</a>
+      <a href="submit.html" class="btn btn-secondary">Drop a Review ✍️</a>
+    </div>
+
+    <div class="rating-legend">
+      <span class="rating-pill poo">💩 1–3 · Poo</span>
+      <span class="rating-pill mids">😐 4–6 · Mids</span>
+      <span class="rating-pill chronic">🔥 7–10 · Chronic</span>
+    </div>
+  </section>
+
+  <!-- Recent reviews strip -->
+  <section class="home-recent">
+    <div class="section-title">🕐 Recent Drops</div>
+    <div class="cards-grid" id="recentGrid">
+      <!-- filled by JS -->
+    </div>
+  </section>
+
+  <!-- Supabase + App -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="app.js"></script>
+  <script>
+    initNav();
+
+    (async () => {
+      const grid = document.getElementById('recentGrid');
+      try {
+        const reviews = await fetchReviews({ sortBy: 'created_at' });
+        const recent  = reviews.slice(0, 6);
+
+        if (recent.length === 0) {
+          grid.innerHTML = `
+            <div class="empty-state">
+              <span class="big-emoji">🍽️</span>
+              <p>No reviews yet — be the first to drop one!</p>
+            </div>`;
+          return;
+        }
+
+        recent.forEach(r => grid.appendChild(buildCard(r)));
+      } catch (err) {
+        console.error(err);
+        grid.innerHTML = `<div class="empty-state"><span class="big-emoji">⚠️</span><p>Couldn't load reviews right now.</p></div>`;
+      }
+    })();
+  </script>
+
+</body>
+</html>
