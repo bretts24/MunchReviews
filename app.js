@@ -114,6 +114,13 @@ function buildCard(review) {
     </div>
   `;
 
+  // Click card to open full review
+  card.style.cursor = 'pointer';
+  card.addEventListener('click', (e) => {
+    if (e.target.closest('.gallery-arrow') || e.target.closest('.gallery-dot')) return;
+    openReviewModal(review);
+  });
+
   // Gallery navigation
   if (photos.length > 1) {
     let current = 0;
@@ -136,7 +143,87 @@ function buildCard(review) {
   return card;
 }
 
-// ---- XSS guard ----------------------------------------
+// ---- Review modal ----------------------------------------
+function openReviewModal(review) {
+  let modal = document.getElementById('reviewModal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'reviewModal';
+    modal.className = 'modal-overlay';
+    modal.innerHTML = `<div class="modal-box" id="modalBox"></div>`;
+    document.body.appendChild(modal);
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) closeReviewModal();
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeReviewModal();
+    });
+  }
+
+  const meta   = getRatingMeta(review.rating);
+  const photos = review.photo_urls || [];
+
+  let galleryHTML = '';
+  if (photos.length > 0) {
+    const imgs = photos.map((url, i) =>
+      `<img src="${url}" class="modal-photo ${i === 0 ? 'active' : ''}" alt="food photo" loading="lazy">`
+    ).join('');
+    const dots = photos.length > 1
+      ? `<div class="gallery-dots">${photos.map((_, i) =>
+          `<span class="gallery-dot ${i === 0 ? 'active' : ''}" data-idx="${i}"></span>`
+        ).join('')}</div>`
+      : '';
+    const arrows = photos.length > 1
+      ? `<button class="gallery-arrow prev" id="modalPrev">&#8249;</button>
+         <button class="gallery-arrow next" id="modalNext">&#8250;</button>`
+      : '';
+    galleryHTML = `<div class="modal-gallery">${imgs}${dots}${arrows}</div>`;
+  }
+
+  document.getElementById('modalBox').innerHTML = `
+    <button class="modal-close" id="modalClose">✕</button>
+    ${galleryHTML}
+    <div class="modal-body">
+      <div class="card-restaurant" style="font-size:1.3rem;margin-bottom:8px;">${escHtml(review.restaurant)}</div>
+      <div class="card-meta" style="margin-bottom:12px;">
+        ${review.food_type ? `<span class="card-food-type">${escHtml(review.food_type)}</span>` : '<span></span>'}
+        <span class="card-date">${review.reviewer_name ? `${escHtml(review.reviewer_name)} · ` : ''}${formatDate(review.created_at)}</span>
+      </div>
+      <div class="rating-badge ${meta.cls}" style="margin-bottom:16px;">${meta.emoji} ${review.rating}/10 — ${meta.label}</div>
+      <p style="font-size:0.95rem;line-height:1.7;color:var(--text);">${escHtml(review.review_text || '')}</p>
+    </div>
+  `;
+
+  modal.classList.add('open');
+  document.body.style.overflow = 'hidden';
+
+  document.getElementById('modalClose').addEventListener('click', closeReviewModal);
+
+  // Gallery nav inside modal
+  if (photos.length > 1) {
+    let current = 0;
+    const imgEls = modal.querySelectorAll('.modal-photo');
+    const dotEls = modal.querySelectorAll('.gallery-dot');
+    function goTo(idx) {
+      imgEls[current].classList.remove('active');
+      dotEls[current].classList.remove('active');
+      current = (idx + photos.length) % photos.length;
+      imgEls[current].classList.add('active');
+      dotEls[current].classList.add('active');
+    }
+    document.getElementById('modalPrev').addEventListener('click', () => goTo(current - 1));
+    document.getElementById('modalNext').addEventListener('click', () => goTo(current + 1));
+    dotEls.forEach(d => d.addEventListener('click', () => goTo(+d.dataset.idx)));
+  }
+}
+
+function closeReviewModal() {
+  const modal = document.getElementById('reviewModal');
+  if (modal) modal.classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+
 function escHtml(str) {
   return String(str)
     .replace(/&/g, '&amp;')
