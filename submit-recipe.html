@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Leave a Review — MunchReviews</title>
+  <title>Add a Recipe — MunchReviews</title>
   <link rel="stylesheet" href="style.css">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍔</text></svg>">
 </head>
@@ -26,59 +26,65 @@
 
   <main class="page">
     <div class="page-header">
-      <h1>Drop a Review ✍️</h1>
-      <p>No login needed — just your honest take.</p>
+      <h1>Add a Recipe 🍳</h1>
+      <p>Share something worth cooking.</p>
     </div>
 
-    <form class="form-card" id="reviewForm" novalidate>
+    <form class="form-card" id="recipeForm" novalidate>
 
-      <!-- Reviewer name -->
+      <!-- Author name -->
       <div class="form-group">
-        <label for="reviewerName">Your Name <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text-muted);">(optional)</span></label>
+        <label for="authorName">Your Name <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text-muted);">(optional)</span></label>
         <input
           type="text"
-          id="reviewerName"
+          id="authorName"
           class="form-input"
           placeholder="e.g. Brett"
           maxlength="60"
         >
       </div>
 
-      <!-- Restaurant name -->
+      <!-- Meal name -->
       <div class="form-group">
-        <label for="restaurant">Restaurant Name *</label>
+        <label for="mealName">Meal Name *</label>
         <input
           type="text"
-          id="restaurant"
+          id="mealName"
           class="form-input"
-          placeholder="e.g. Joe's Burgers"
+          placeholder="e.g. Smash Burgers with Special Sauce"
           maxlength="120"
           required
         >
       </div>
 
-      <!-- Food type -->
+      <!-- Prep time -->
       <div class="form-group">
-        <label for="foodType">Food Type</label>
+        <label for="prepTime">Prep Time <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text-muted);">(optional)</span></label>
         <input
           type="text"
-          id="foodType"
+          id="prepTime"
           class="form-input"
-          placeholder="e.g. Burgers, Sushi, Mexican, Pizza..."
-          maxlength="80"
+          placeholder="e.g. 30 mins, 1 hr 15 mins"
+          maxlength="60"
         >
       </div>
 
-      <!-- Location -->
-      <div class="form-group form-row">
-        <div style="flex:1;">
-          <label for="city">City <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text-muted);">(optional)</span></label>
-          <input type="text" id="city" class="form-input" placeholder="e.g. Austin" maxlength="80">
+      <!-- Ingredients -->
+      <div class="form-group">
+        <label>Ingredients *</label>
+        <div class="ingredient-header">
+          <span class="col-amount">Amount / Unit</span>
+          <span class="col-item">Ingredient</span>
         </div>
-        <div style="flex:0 0 110px;">
-          <label for="state">State</label>
-          <input type="text" id="state" class="form-input" placeholder="e.g. TX" maxlength="30">
-        </div>
+        <div class="dynamic-list" id="ingredientList"></div>
+        <button type="button" class="add-row-btn" id="addIngredient">＋ Add Ingredient</button>
+      </div>
+
+      <!-- Equipment -->
+      <div class="form-group">
+        <label>Kitchen Equipment <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text-muted);">(optional)</span></label>
+        <div class="dynamic-list" id="equipmentList"></div>
+        <button type="button" class="add-row-btn" id="addEquipment">＋ Add Equipment</button>
       </div>
 
       <!-- Rating slider -->
@@ -110,19 +116,6 @@
         </div>
       </div>
 
-      <!-- Review text -->
-      <div class="form-group">
-        <label for="reviewText">Your Review *</label>
-        <textarea
-          id="reviewText"
-          class="form-input"
-          placeholder="What did you think? Be honest..."
-          maxlength="600"
-          required
-        ></textarea>
-        <div class="char-count" id="charCount">0 / 600</div>
-      </div>
-
       <!-- Photos -->
       <div class="form-group">
         <label>Photos <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text-muted);">(optional — up to 5)</span></label>
@@ -142,7 +135,7 @@
 
       <!-- Submit -->
       <button type="submit" class="btn btn-primary" id="submitBtn" style="width:100%;justify-content:center;border-radius:8px;padding:15px;">
-        Post Review 🚀
+        Post Recipe 🍳
       </button>
 
     </form>
@@ -155,9 +148,9 @@
     initNav();
 
     // ---- Rating slider ----------------------------------------
-    const slider        = document.getElementById('ratingSlider');
-    const ratingNumber  = document.getElementById('ratingNumber');
-    const ratingLabel   = document.getElementById('ratingLabelText');
+    const slider       = document.getElementById('ratingSlider');
+    const ratingNumber = document.getElementById('ratingNumber');
+    const ratingLabel  = document.getElementById('ratingLabelText');
 
     function updateRatingDisplay() {
       const val  = +slider.value;
@@ -171,21 +164,53 @@
     slider.addEventListener('input', updateRatingDisplay);
     updateRatingDisplay();
 
-    // ---- Char counter ----------------------------------------
-    const reviewText = document.getElementById('reviewText');
-    const charCount  = document.getElementById('charCount');
+    // ---- Dynamic ingredient rows ----------------------------------------
+    const ingredientList = document.getElementById('ingredientList');
 
-    reviewText.addEventListener('input', () => {
-      const len = reviewText.value.length;
-      charCount.textContent = `${len} / 600`;
-      charCount.className   = len >= 600 ? 'char-count limit' : len >= 500 ? 'char-count warn' : 'char-count';
-    });
+    function addIngredientRow(amount = '', item = '') {
+      const row = document.createElement('div');
+      row.className = 'dynamic-row';
+      row.innerHTML = `
+        <input type="text" class="form-input ing-amount-input" placeholder="e.g. 1 cup" value="${escHtml(amount)}" maxlength="60" style="width:130px;flex-shrink:0;">
+        <input type="text" class="form-input ing-item-input"   placeholder="e.g. all-purpose flour" value="${escHtml(item)}" maxlength="120" style="flex:1;">
+        <button type="button" class="remove-row-btn" title="Remove">✕</button>
+      `;
+      row.querySelector('.remove-row-btn').addEventListener('click', () => row.remove());
+      ingredientList.appendChild(row);
+    }
+
+    document.getElementById('addIngredient').addEventListener('click', () => addIngredientRow());
+
+    // Start with 3 blank ingredient rows
+    addIngredientRow();
+    addIngredientRow();
+    addIngredientRow();
+
+    // ---- Dynamic equipment rows ----------------------------------------
+    const equipmentList = document.getElementById('equipmentList');
+
+    function addEquipmentRow(value = '') {
+      const row = document.createElement('div');
+      row.className = 'dynamic-row';
+      row.innerHTML = `
+        <input type="text" class="form-input equip-input" placeholder="e.g. Cast iron skillet" value="${escHtml(value)}" maxlength="100" style="flex:1;">
+        <button type="button" class="remove-row-btn" title="Remove">✕</button>
+      `;
+      row.querySelector('.remove-row-btn').addEventListener('click', () => row.remove());
+      equipmentList.appendChild(row);
+    }
+
+    document.getElementById('addEquipment').addEventListener('click', () => addEquipmentRow());
+
+    // Start with 2 blank equipment rows
+    addEquipmentRow();
+    addEquipmentRow();
 
     // ---- Photo upload ----------------------------------------
-    const photoInput   = document.getElementById('photoInput');
+    const photoInput    = document.getElementById('photoInput');
     const photoPreviews = document.getElementById('photoPreviews');
-    const uploadZone   = document.getElementById('uploadZone');
-    let selectedFiles  = [];
+    const uploadZone    = document.getElementById('uploadZone');
+    let selectedFiles   = [];
 
     function renderPreviews() {
       photoPreviews.innerHTML = '';
@@ -210,13 +235,11 @@
 
     photoInput.addEventListener('change', () => {
       const incoming = Array.from(photoInput.files);
-      const combined = [...selectedFiles, ...incoming];
-      selectedFiles  = combined.slice(0, 5); // cap at 5
+      selectedFiles  = [...selectedFiles, ...incoming].slice(0, 5);
       renderPreviews();
-      photoInput.value = ''; // reset so same file can be re-added
+      photoInput.value = '';
     });
 
-    // Drag-and-drop
     uploadZone.addEventListener('dragover', (e) => {
       e.preventDefault();
       uploadZone.classList.add('dragover');
@@ -225,69 +248,73 @@
     uploadZone.addEventListener('drop', (e) => {
       e.preventDefault();
       uploadZone.classList.remove('dragover');
-      const files   = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
-      const combined = [...selectedFiles, ...files];
-      selectedFiles  = combined.slice(0, 5);
+      const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
+      selectedFiles = [...selectedFiles, ...files].slice(0, 5);
       renderPreviews();
     });
 
     // ---- Form submit ----------------------------------------
-    const form      = document.getElementById('reviewForm');
+    const form      = document.getElementById('recipeForm');
     const submitBtn = document.getElementById('submitBtn');
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
 
-      const reviewerName = document.getElementById('reviewerName').value.trim();
-      const restaurant   = document.getElementById('restaurant').value.trim();
-      const foodType     = document.getElementById('foodType').value.trim();
-      const city         = document.getElementById('city').value.trim();
-      const state        = document.getElementById('state').value.trim();
-      const rating       = +slider.value;
-      const text         = reviewText.value.trim();
+      const authorName = document.getElementById('authorName').value.trim();
+      const mealName   = document.getElementById('mealName').value.trim();
+      const prepTime   = document.getElementById('prepTime').value.trim();
+      const rating     = +slider.value;
 
-      if (!restaurant) {
-        showToast('Please enter a restaurant name.', 'error');
+      // Collect ingredients (skip rows where item is empty)
+      const ingredients = Array.from(ingredientList.querySelectorAll('.dynamic-row')).map(row => ({
+        amount: row.querySelector('.ing-amount-input').value.trim(),
+        item:   row.querySelector('.ing-item-input').value.trim(),
+      })).filter(ing => ing.item);
+
+      // Collect equipment (skip empty rows)
+      const equipment = Array.from(equipmentList.querySelectorAll('.equip-input'))
+        .map(inp => inp.value.trim())
+        .filter(Boolean);
+
+      if (!mealName) {
+        showToast('Please enter a meal name.', 'error');
         return;
       }
-      if (!text) {
-        showToast('Please write a review.', 'error');
+      if (ingredients.length === 0) {
+        showToast('Please add at least one ingredient.', 'error');
         return;
       }
 
       submitBtn.disabled    = true;
-      submitBtn.textContent = 'Posting... 🚀';
+      submitBtn.textContent = 'Posting... 🍳';
 
       try {
-        // Upload photos first
         let photoUrls = [];
         if (selectedFiles.length > 0) {
           submitBtn.textContent = 'Uploading photos... 📸';
-          photoUrls = await uploadPhotos(selectedFiles);
+          photoUrls = await uploadRecipePhotos(selectedFiles);
         }
 
-        // Insert review
-        const { error } = await db.from('reviews').insert({
-          reviewer_name: reviewerName || null,
-          restaurant,
-          food_type:     foodType || null,
-          city:          city  || null,
-          state:         state || null,
+        const { error } = await db.from('recipes').insert({
+          author_name: authorName || null,
+          meal_name:   mealName,
+          prep_time:   prepTime  || null,
+          ingredients,
+          equipment,
           rating,
-          review_text:   text,
-          photo_urls:    photoUrls,
+          photo_urls:  photoUrls,
         });
 
         if (error) throw error;
 
-        showToast('Review posted! 🔥', 'success');
-        setTimeout(() => window.location.href = 'reviews.html', 1200);
+        showToast('Recipe posted! 🔥', 'success');
+        setTimeout(() => window.location.href = 'recipes.html', 1200);
 
       } catch (err) {
         console.error(err);
         showToast('Something went wrong. Try again.', 'error');
         submitBtn.disabled    = false;
-        submitBtn.textContent = 'Post Review 🚀';
+        submitBtn.textContent = 'Post Recipe 🍳';
       }
     });
   </script>

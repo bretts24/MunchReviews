@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>All Reviews — MunchReviews</title>
+  <title>Recipes — MunchReviews</title>
   <link rel="stylesheet" href="style.css">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍔</text></svg>">
 </head>
@@ -26,8 +26,8 @@
 
   <main class="page">
     <div class="page-header">
-      <h1>All Reviews</h1>
-      <p>Search by restaurant, food type, or location</p>
+      <h1>Recipes</h1>
+      <p>Search by meal name or author</p>
     </div>
 
     <!-- Search + filter -->
@@ -36,7 +36,7 @@
         type="search"
         class="search-input"
         id="searchInput"
-        placeholder="🔍  Search restaurant, food type, or city..."
+        placeholder="🔍  Search recipes..."
         autocomplete="off"
       >
       <select class="filter-select" id="sortSelect">
@@ -49,10 +49,10 @@
     <p id="resultsCount" style="color:var(--text-muted);font-size:0.88rem;margin-bottom:20px;"></p>
 
     <!-- Cards -->
-    <div class="cards-grid" id="reviewsGrid">
+    <div class="cards-grid" id="recipesGrid">
       <div class="empty-state">
         <span class="big-emoji">⏳</span>
-        <p>Loading reviews...</p>
+        <p>Loading recipes...</p>
       </div>
     </div>
   </main>
@@ -63,7 +63,7 @@
   <script>
     initNav();
 
-    const grid        = document.getElementById('reviewsGrid');
+    const grid        = document.getElementById('recipesGrid');
     const searchInput = document.getElementById('searchInput');
     const sortSelect  = document.getElementById('sortSelect');
     const countEl     = document.getElementById('resultsCount');
@@ -73,31 +73,31 @@
     async function load() {
       grid.innerHTML = `<div class="empty-state"><span class="big-emoji">⏳</span><p>Loading...</p></div>`;
       try {
-        const reviews = await fetchReviews({
+        const recipes = await fetchRecipes({
           search: searchInput.value,
           sortBy: sortSelect.value,
         });
 
         grid.innerHTML = '';
 
-        countEl.textContent = reviews.length
-          ? `${reviews.length} review${reviews.length !== 1 ? 's' : ''} found`
+        countEl.textContent = recipes.length
+          ? `${recipes.length} recipe${recipes.length !== 1 ? 's' : ''} found`
           : '';
 
-        if (reviews.length === 0) {
+        if (recipes.length === 0) {
           grid.innerHTML = `
             <div class="empty-state">
               <span class="big-emoji">🤷</span>
-              <p>${searchInput.value.trim() ? 'No reviews match your search.' : 'No reviews yet — drop the first one!'}</p>
-              ${searchInput.value.trim() ? '' : '<a href="submit.html" class="btn btn-primary" style="margin-top:16px;">Leave a Review ✍️</a>'}
+              <p>${searchInput.value.trim() ? 'No recipes match your search.' : 'No recipes yet — add the first one!'}</p>
+              ${searchInput.value.trim() ? '' : '<a href="submit-recipe.html" class="btn btn-primary" style="margin-top:16px;">Add a Recipe 🍳</a>'}
             </div>`;
           return;
         }
 
-        reviews.forEach(r => grid.appendChild(buildCard(r)));
+        recipes.forEach(r => grid.appendChild(buildRecipeCard(r)));
       } catch (err) {
         console.error(err);
-        grid.innerHTML = `<div class="empty-state"><span class="big-emoji">⚠️</span><p>Couldn't load reviews right now.</p></div>`;
+        grid.innerHTML = `<div class="empty-state"><span class="big-emoji">⚠️</span><p>Couldn't load recipes right now.</p></div>`;
       }
     }
 
