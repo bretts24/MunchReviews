@@ -30,6 +30,18 @@
 
     <form class="form-card" id="reviewForm" novalidate>
 
+      <!-- Reviewer name -->
+      <div class="form-group">
+        <label for="reviewerName">Your Name <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text-muted);">(optional)</span></label>
+        <input
+          type="text"
+          id="reviewerName"
+          class="form-input"
+          placeholder="e.g. Brett"
+          maxlength="60"
+        >
+      </div>
+
       <!-- Restaurant name -->
       <div class="form-group">
         <label for="restaurant">Restaurant Name *</label>
@@ -78,7 +90,7 @@
             <div class="rating-labels">
               <span>1 · Poo 💩</span>
               <span>5 · Mids 😐</span>
-              <span>10 · Chronic 🔥</span>
+              <span>10 · Holy Shit 🤯</span>
             </div>
           </div>
         </div>
@@ -137,7 +149,8 @@
       const val  = +slider.value;
       const meta = getRatingMeta(val);
       ratingNumber.textContent = val;
-      ratingNumber.style.color = meta.cls === 'poo' ? '#c87941' : meta.cls === 'mids' ? '#d4ad3a' : '#66bb6a';
+      const colorMap = { poo: '#c87941', shwag: '#c4784a', mids: '#d4ad3a', chronic: '#66bb6a', gas: '#ffb74d', holyshit: '#ff7070' };
+      ratingNumber.style.color = colorMap[meta.cls] || '#66bb6a';
       ratingLabel.textContent  = `${meta.label} ${meta.emoji}`;
     }
 
@@ -211,10 +224,11 @@
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
 
-      const restaurant = document.getElementById('restaurant').value.trim();
-      const foodType   = document.getElementById('foodType').value.trim();
-      const rating     = +slider.value;
-      const text       = reviewText.value.trim();
+      const reviewerName = document.getElementById('reviewerName').value.trim();
+      const restaurant   = document.getElementById('restaurant').value.trim();
+      const foodType     = document.getElementById('foodType').value.trim();
+      const rating       = +slider.value;
+      const text         = reviewText.value.trim();
 
       if (!restaurant) {
         showToast('Please enter a restaurant name.', 'error');
@@ -238,11 +252,12 @@
 
         // Insert review
         const { error } = await db.from('reviews').insert({
+          reviewer_name: reviewerName || null,
           restaurant,
-          food_type:   foodType || null,
+          food_type:     foodType || null,
           rating,
-          review_text: text,
-          photo_urls:  photoUrls,
+          review_text:   text,
+          photo_urls:    photoUrls,
         });
 
         if (error) throw error;

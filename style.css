@@ -15,8 +15,11 @@
   --text: #f0f0f0;
   --text-muted: #888;
   --poo: #8b4513;
+  --shwag: #a0522d;
   --mids: #c9a227;
   --chronic: #4caf50;
+  --gas: #ff9800;
+  --holyshit: #ff5252;
   --radius: 12px;
   --shadow: 0 4px 24px rgba(0,0,0,0.5);
 }
@@ -225,8 +228,11 @@ nav {
 }
 
 .rating-pill.poo      { background: rgba(139,69,19,0.2);  color: #c87941; border: 1px solid #8b4513; }
+.rating-pill.shwag    { background: rgba(160,82,45,0.2);  color: #c4784a; border: 1px solid #a0522d; }
 .rating-pill.mids     { background: rgba(201,162,39,0.2); color: #d4ad3a; border: 1px solid #c9a227; }
 .rating-pill.chronic  { background: rgba(76,175,80,0.2);  color: #66bb6a; border: 1px solid #4caf50; }
+.rating-pill.gas      { background: rgba(255,152,0,0.2);  color: #ffb74d; border: 1px solid #ff9800; }
+.rating-pill.holyshit { background: rgba(255,82,82,0.2);  color: #ff7070; border: 1px solid #ff5252; }
 
 /* Recent reviews strip on home */
 .home-recent {
@@ -452,9 +458,12 @@ nav {
   margin-bottom: 10px;
 }
 
-.rating-badge.poo     { background: rgba(139,69,19,0.2);  color: #c87941; }
-.rating-badge.mids    { background: rgba(201,162,39,0.2); color: #d4ad3a; }
-.rating-badge.chronic { background: rgba(76,175,80,0.2);  color: #66bb6a; }
+.rating-badge.poo      { background: rgba(139,69,19,0.2);  color: #c87941; }
+.rating-badge.shwag    { background: rgba(160,82,45,0.2);  color: #c4784a; }
+.rating-badge.mids     { background: rgba(201,162,39,0.2); color: #d4ad3a; }
+.rating-badge.chronic  { background: rgba(76,175,80,0.2);  color: #66bb6a; }
+.rating-badge.gas      { background: rgba(255,152,0,0.2);  color: #ffb74d; }
+.rating-badge.holyshit { background: rgba(255,82,82,0.2);  color: #ff7070; }
 
 .card-review {
   font-size: 0.88rem;
@@ -622,7 +631,7 @@ textarea.form-input {
   width: 100%;
   height: 8px;
   border-radius: 4px;
-  background: linear-gradient(to right, var(--poo) 0%, var(--mids) 40%, var(--chronic) 100%);
+  background: linear-gradient(to right, var(--poo) 0%, var(--shwag) 20%, var(--mids) 40%, var(--chronic) 60%, var(--gas) 80%, var(--holyshit) 100%);
   outline: none;
   cursor: pointer;
 }

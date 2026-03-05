@@ -43,9 +43,12 @@ function showToast(msg, type = 'success') {
 
 // ---- Rating helpers ----------------------------------------
 function getRatingMeta(rating) {
-  if (rating <= 3)      return { label: 'Poo',     cls: 'poo',     emoji: '💩' };
-  if (rating <= 6)      return { label: 'Mids',    cls: 'mids',    emoji: '😐' };
-  return                       { label: 'Chronic', cls: 'chronic', emoji: '🔥' };
+  if (rating <= 2)  return { label: 'Poo',       cls: 'poo',      emoji: '💩' };
+  if (rating <= 4)  return { label: 'Shwag',     cls: 'shwag',    emoji: '😒' };
+  if (rating <= 6)  return { label: 'Mids',      cls: 'mids',     emoji: '😐' };
+  if (rating <= 7)  return { label: 'Chronic',   cls: 'chronic',  emoji: '🌿' };
+  if (rating <= 9)  return { label: 'Gas',       cls: 'gas',      emoji: '🔥' };
+  return                   { label: 'Holy Shit', cls: 'holyshit', emoji: '🤯' };
 }
 
 function formatDate(iso) {
@@ -104,7 +107,7 @@ function buildCard(review) {
       <div class="card-restaurant">${escHtml(review.restaurant)}</div>
       <div class="card-meta">
         ${review.food_type ? `<span class="card-food-type">${escHtml(review.food_type)}</span>` : '<span></span>'}
-        <span class="card-date">${formatDate(review.created_at)}</span>
+        <span class="card-date">${review.reviewer_name ? `${escHtml(review.reviewer_name)} · ` : ''}${formatDate(review.created_at)}</span>
       </div>
       <div class="rating-badge ${meta.cls}">${meta.emoji} ${review.rating}/10 — ${meta.label}</div>
       <p class="card-review">${escHtml(review.review_text || '')}</p>

@@ -7,12 +7,16 @@
 create table if not exists reviews (
   id            uuid primary key default gen_random_uuid(),
   created_at    timestamptz default now(),
+  reviewer_name text,
   restaurant    text not null,
   food_type     text,
   rating        int  not null check (rating between 1 and 10),
   review_text   text check (char_length(review_text) <= 600),
   photo_urls    text[] default '{}'
 );
+
+-- Migration: add reviewer_name to existing table
+-- alter table reviews add column if not exists reviewer_name text;
 
 -- 2. Enable Row Level Security (open read/write for now — lock down later)
 alter table reviews enable row level security;
